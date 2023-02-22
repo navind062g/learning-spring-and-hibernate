@@ -1,0 +1,1 @@
+This Repository contains the Spring and Hibernate projects using Learning by Doing method.
