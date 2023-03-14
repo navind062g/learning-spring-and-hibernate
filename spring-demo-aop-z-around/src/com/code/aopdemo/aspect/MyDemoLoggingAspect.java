@@ -3,10 +3,13 @@ package com.code.aopdemo.aspect;
 import java.util.List;
 
 import org.aspectj.lang.JoinPoint;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.AfterReturning;
+import org.aspectj.lang.annotation.AfterThrowing;
+import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
-import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -17,6 +20,31 @@ import com.code.aopdemo.Account;
 @Component
 @Order(3)
 public class MyDemoLoggingAspect {
+	
+	@Around("execution(* com.code.aopdemo.service.TrafficFortuneService.getFortune(..))")
+	public Object aroundGetFortune(ProceedingJoinPoint theProceedingJoinPoint) 
+			throws Throwable
+	{
+		// print out the method, we are advising on
+		String method = theProceedingJoinPoint.getSignature().toShortString();
+		System.out.println("\n=====> Executing @Around on method: "+method);
+		
+		// get begin timestamp
+		long beginTs = System.currentTimeMillis();
+		
+		// now, lets execute the timestamp
+		Object result = theProceedingJoinPoint.proceed();
+		
+		// get the end timestamp
+		long endTs = System.currentTimeMillis();
+				
+		// compute duration and display it
+		long duration = (long) ((endTs - beginTs)/1000.0);
+		System.out.println("\n=====> Duration: "+duration+" seconds");
+		
+		return null;
+	}
+	
 
 	// this is where we add all of our related advices for logging
 
@@ -36,6 +64,30 @@ public class MyDemoLoggingAspect {
 			System.out.println(tempArg);
 
 		}
+	}
+	
+	@After("execution(* com.code.aopdemo.dao.AccountDAO.findAccounts(..))")
+	public void afterAdviceOnFindAccounts(JoinPoint theJoinPoint) {
+		System.out.println("\n======>>> Executing @After Advice on method");
+		
+		String method = ((MethodSignature)(theJoinPoint.getSignature())).getMethod().toString();
+		System.out.println("\n=====>>> Executing @After on method" + method);
+	}
+	
+	
+	@AfterThrowing(
+			pointcut = "execution(* com.code.aopdemo.dao.AccountDAO.findAccounts(..))",
+			throwing = "theExc"
+			)
+	public void afterThrowingAdviceOnFindAccounts(JoinPoint theJoinPoint, Throwable theExc)
+	{
+		System.out.println("\n======>>> Executing @AfterThrowing Advice on method");
+		// print out which method we are advising on
+		String method = ((MethodSignature)(theJoinPoint.getSignature())).getMethod().toString();
+		System.out.println("\n=====>>> Executing @AfterThrowing on method" + method);
+	
+		// log the exception
+		System.out.println("\n=====>>> The exception is: "+theExc);
 	}
 
 	@AfterReturning(
